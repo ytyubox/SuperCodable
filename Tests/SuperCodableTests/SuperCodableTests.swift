@@ -3,10 +3,10 @@ import XCTest
 
 // MARK: - Student
 
-let doubleTransform = FATransformOf<Int, Double> { (double) -> Int? in
-    Int(double ?? 0)
-} toJSON: { (int) -> Double? in
-    Double(int ?? 0)
+let doubleTransform = FATransformOf<Int, Double> { (double) -> Int in
+    Int(double)
+} toJSON: { (int) -> Double in
+    Double(int)
 }
 
 // MARK: - Student
