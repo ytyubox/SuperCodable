@@ -1,12 +1,17 @@
-# SuperCodable
+//
+/*
+ *		Created by 游宗諭 in 2021/4/10
+ *
+ *		Using Swift 5.0
+ *
+ *		Running on macOS 11.2
+ */
 
-Inspired by: https://medium.com/trueid-developers/combined-propertywrapper-with-codable-swift-368dc4aa2703
+import Foundation
 
+struct StudentWithCodable: Codable {
+    // MARK: Lifecycle
 
-> From Foundation
-
-```swift
-struct AStudent: Codable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.aID = try container.decode(String.self, forKey: .aID)
@@ -14,6 +19,8 @@ struct AStudent: Codable {
         let gradeDecoded = try container.decode(Double.self, forKey: .aGrade)
         self.AGrede = Int(gradeDecoded)
     }
+
+    // MARK: Internal
 
     enum CodingKeys: String, CodingKey {
         case aName = "name"
@@ -32,27 +39,3 @@ struct AStudent: Codable {
         try container.encode(aName, forKey: .aName)
     }
 }
-```
-
-
-> To SuperCodable
-
-```swift
-struct Student: SuperCodable {
-    @Keyed("id")
-    var aID: String
-    
-    @Keyed("name") 
-    var aName: String
-    
-    @KeyedTransform("grade", doubleTransform)
-    var AGrede: Int
-}
-
-let doubleTransform = FATransformOf<Int, Double> {
-    (double) -> Int in
-    Int(double)
-} toEncoder: { (int) -> Double in
-    Double(int)
-}
-```
