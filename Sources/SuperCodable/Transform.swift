@@ -9,24 +9,39 @@
 
 import Foundation
 
-// MARK: - FATransformType
+// MARK: - FATransformDecoder
 
-protocol FATransformType {
+protocol FATransformDecoder {
     associatedtype Out
-    associatedtype In: Encodable
+    associatedtype In
     func transformFromDecoder(_ value: Any) throws -> Out?
+}
+
+// MARK: - FATransformTypeEncoder
+
+protocol FATransformTypeEncoder {
+    associatedtype Out
+    associatedtype In
     func transformToEncoder(_ container: inout EncodableKey.EncodeContainer, _ value: Out, key: String) throws
 }
 
-// MARK: - FATransformOf
-struct FATransformOfError:LocalizedError {
+// MARK: - FATransformOfError
+
+struct FATransformOfError: LocalizedError {
+    // MARK: Lifecycle
+
     internal init(_ errorDescription: String? = nil) {
         self.errorDescription = errorDescription
     }
-    
+
+    // MARK: Internal
+
     var errorDescription: String?
 }
-public class FATransformOf<OutType, InType: Encodable>: FATransformType {
+
+// MARK: - FATransformOf
+
+public class FATransformOf<OutType, InType> {
     // MARK: Lifecycle
 
     public init(fromDecoder: @escaping (InType) throws -> OutType,
@@ -41,34 +56,42 @@ public class FATransformOf<OutType, InType: Encodable>: FATransformType {
     public typealias Out = OutType
     public typealias In = InType
 
-    public func transformFromDecoder(_ value: Any) throws -> OutType? {
-        guard let v = value as? InType else {
-            throw FATransformOfError("expect value is \(InType.self), but found \(type(of: value))")
-        }
-        return try fromDecoder(v)
-    }
-
-    // MARK: Internal
-
-    func transformToEncoder(_ container: inout KeyedEncodingContainer<DynamicCodingKeys>,
-                         _ value: Out,
-                         key: String) throws
-    {
-        let inOubject = try toEncoder(value)
-        let codingKey = DynamicCodingKeys(key: key)
-        try? container.encodeIfPresent(inOubject, forKey: codingKey)
-    }
-
     // MARK: Private
 
     private let fromDecoder: (InType) throws -> OutType
     private let toEncoder: (OutType) throws -> InType
 }
 
+// MARK: FATransformTypeEncoder
+
+extension FATransformOf: FATransformTypeEncoder where In: Encodable {
+    // MARK: Internal
+
+    func transformToEncoder(_ container: inout KeyedEncodingContainer<DynamicCodingKeys>,
+                            _ value: Out,
+                            key: String) throws
+    {
+        let inOubject = try toEncoder(value)
+        let codingKey = DynamicCodingKeys(key: key)
+        try? container.encodeIfPresent(inOubject, forKey: codingKey)
+    }
+}
+
+// MARK: FATransformDecoder
+
+extension FATransformOf: FATransformDecoder where In: Decodable {
+    public func transformFromDecoder(_ value: Any) throws -> OutType? {
+        guard let v = value as? InType else {
+            throw FATransformOfError("expect value is \(InType.self), but found \(type(of: value))")
+        }
+        return try fromDecoder(v)
+    }
+}
+
 // MARK: - KeyedTransform
 
 @propertyWrapper
-public final class KeyedTransform<In: Codable, Out: Codable> {
+public final class KeyedTransform<In, Out> {
     // MARK: Lifecycle
 
     public init(_ key: String,
@@ -101,7 +124,7 @@ public final class KeyedTransform<In: Codable, Out: Codable> {
 
 // MARK: EncodableKey
 
-extension KeyedTransform: EncodableKey {
+extension KeyedTransform: EncodableKey where In: Encodable {
     public func encodeValue(from container: inout EncodeContainer) throws {
         try transform.transformToEncoder(&container, wrappedValue, key: key)
     }
@@ -109,7 +132,7 @@ extension KeyedTransform: EncodableKey {
 
 // MARK: DecodableKey
 
-extension KeyedTransform: DecodableKey {
+extension KeyedTransform: DecodableKey where In: Decodable {
     public func decodeValue(from container: DecodeContainer) throws {
         let codingKey = DynamicCodingKeys(key: key)
         if let value = try container.decodeIfPresent(In.self, forKey: codingKey) {
