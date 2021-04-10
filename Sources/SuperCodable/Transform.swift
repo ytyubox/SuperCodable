@@ -14,8 +14,8 @@ import Foundation
 protocol FATransformType {
     associatedtype Out
     associatedtype In: Encodable
-    func transformFromJSON(_ value: Any) throws -> Out?
-    func transformToJSON(_ container: inout EncodableKey.EncodeContainer, _ value: Out, key: String) throws
+    func transformFromDecoder(_ value: Any) throws -> Out?
+    func transformToEncoder(_ container: inout EncodableKey.EncodeContainer, _ value: Out, key: String) throws
 }
 
 // MARK: - FATransformOf
@@ -29,11 +29,11 @@ struct FATransformOfError:LocalizedError {
 public class FATransformOf<OutType, InType: Encodable>: FATransformType {
     // MARK: Lifecycle
 
-    public init(fromJSON: @escaping (InType) throws -> OutType,
-                toJSON: @escaping (OutType) throws -> InType)
+    public init(fromDecoder: @escaping (InType) throws -> OutType,
+                toEncoder: @escaping (OutType) throws -> InType)
     {
-        self.fromJSON = fromJSON
-        self.toJSON = toJSON
+        self.fromDecoder = fromDecoder
+        self.toEncoder = toEncoder
     }
 
     // MARK: Public
@@ -41,28 +41,28 @@ public class FATransformOf<OutType, InType: Encodable>: FATransformType {
     public typealias Out = OutType
     public typealias In = InType
 
-    public func transformFromJSON(_ value: Any) throws -> OutType? {
+    public func transformFromDecoder(_ value: Any) throws -> OutType? {
         guard let v = value as? InType else {
             throw FATransformOfError("expect value is \(InType.self), but found \(type(of: value))")
         }
-        return try fromJSON(v)
+        return try fromDecoder(v)
     }
 
     // MARK: Internal
 
-    func transformToJSON(_ container: inout KeyedEncodingContainer<DynamicCodingKeys>,
+    func transformToEncoder(_ container: inout KeyedEncodingContainer<DynamicCodingKeys>,
                          _ value: Out,
                          key: String) throws
     {
-        let inOubject = try toJSON(value)
+        let inOubject = try toEncoder(value)
         let codingKey = DynamicCodingKeys(key: key)
         try? container.encodeIfPresent(inOubject, forKey: codingKey)
     }
 
     // MARK: Private
 
-    private let fromJSON: (InType) throws -> OutType
-    private let toJSON: (OutType) throws -> InType
+    private let fromDecoder: (InType) throws -> OutType
+    private let toEncoder: (OutType) throws -> InType
 }
 
 // MARK: - KeyedTransform
@@ -103,7 +103,7 @@ public final class KeyedTransform<In: Codable, Out: Codable> {
 
 extension KeyedTransform: EncodableKey {
     public func encodeValue(from container: inout EncodeContainer) throws {
-        try transform.transformToJSON(&container, wrappedValue, key: key)
+        try transform.transformToEncoder(&container, wrappedValue, key: key)
     }
 }
 
@@ -113,7 +113,7 @@ extension KeyedTransform: DecodableKey {
     public func decodeValue(from container: DecodeContainer) throws {
         let codingKey = DynamicCodingKeys(key: key)
         if let value = try container.decodeIfPresent(In.self, forKey: codingKey) {
-            self.value = try transform.transformFromJSON(value)
+            self.value = try transform.transformFromDecoder(value)
         }
     }
 }

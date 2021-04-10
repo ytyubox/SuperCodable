@@ -3,10 +3,11 @@ import XCTest
 
 // MARK: - Student
 
-let doubleTransform = FATransformOf<Int, Double> { (double) -> Int in
+let doubleTransform = FATransformOf<Int, Double> {
+    (double) -> Int in
     Int(double)
-} toJSON: { (int) -> Double in
-    Double(int)
+} toEncoder: { (int) -> Double in
+    Double(int) * 10
 }
 
 // MARK: - Student
@@ -49,11 +50,11 @@ final class SuperCodableTests: XCTestCase {
                        3)
         XCTAssertEqual(
             sut.map(\.AGrede),
-            [3, 2 ,4])
+            [3, 2, 4])
         let encoded = try JSONEncoder().encode(sut)
         let encodedString = try XCTUnwrap(String(data: encoded, encoding: .utf8))
         XCTAssertEqual("""
-        [{"id":"1","name":"Josh","grade":3},{"id":"2","name":"Marc","grade":2},{"id":"3","name":"Judy","grade":4}]
+        [{"id":"1","name":"Josh","grade":30},{"id":"2","name":"Marc","grade":20},{"id":"3","name":"Judy","grade":40}]
         """, encodedString)
     }
 }
