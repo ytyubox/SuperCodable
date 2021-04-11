@@ -61,13 +61,15 @@ let doubleTransform = FATransformOf<Int, Double> {
 
 ## Known side effect 
 
-- SuperDecoable must construct from nothing `(init()`)
-- `@Keyed var id:Int` will do O(n) calculation on underlaying wrapper `_id` into key `id`.
+- SuperDecoable must construct from nothing `(init()`
+- `@Keyed var id:Int` will do **O(n) calculation** on underlaying wrapper `_VARIABLE_NAME` into key `VARIABLE_NAME`. **Be ware of variable name takes too long**
 
 
 ## Known Disability
 
-- Every property in a SuperCodable should a `DecodableKey` / `EncodableKey`, otherwise the property will simply ignored during the Codable process.
+- Every property in a SuperCodable should a `DecodableKey` / `EncodableKey`, otherwise the property(which should be `Cobable`) will **simply ignored** during the Codable process.
+> Why:
+>> Basically Mirror can't matating the object value during the . `init(from decoder:) throws`, since we create the object from `self.init()`
 
 
 ## Other notes
