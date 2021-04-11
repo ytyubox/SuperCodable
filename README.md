@@ -56,3 +56,9 @@ let doubleTransform = FATransformOf<Int, Double> {
     Double(int)
 }
 ```
+
+
+## Known side effect 
+
+- SuperDecoable must construct from nothing `(init()`)
+- `@Keyed var id:Int` will do O(n) calculation on underlaying wrapper `_id` into key `id`.
