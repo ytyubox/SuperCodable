@@ -39,6 +39,21 @@ final class DecodeTests: XCTestCase {
         XCTAssertEqual(sut.aObject.aID, "1")
     }
 
+    func testKeyedWithNestedCodable() throws {
+        let data =
+            #"""
+            {
+                "object": {
+                    "bObject": {
+                        "id": "1"
+                    }
+                }
+            }
+            """#.data(using: .utf8)!
+        let sut = try JSONDecoder().decode(KeyWithNestedDeodable.self, from: data)
+        XCTAssertEqual(sut.aObject.bObject.id, "1")
+    }
+
     // MARK: Private
 
     private func makeSUT<T: SuperDecodable>(
@@ -75,4 +90,19 @@ private struct KeyedWithoutKey: SuperDecodable {
 private struct KeyedWitNestedKeyed: SuperDecodable {
     @Keyed("object")
     var aObject: KeyedWithKey
+}
+
+// MARK: - KeyWithNestedDeodable
+
+private struct KeyWithNestedDeodable: SuperDecodable {
+    struct AObject: Decodable {
+        struct Bobject: Decodable {
+            var id: String
+        }
+
+        var bObject: Bobject
+    }
+
+    @Keyed("object")
+    var aObject: AObject
 }

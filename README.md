@@ -57,6 +57,9 @@ let doubleTransform = FATransformOf<Int, Double> {
 }
 ```
 
+## Feature
+
+- Working with Nested None `Foundation.Coable` property 
 
 ## Known side effect 
 

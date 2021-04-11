@@ -36,6 +36,18 @@ final class EncodableTests: XCTestCase {
             {"id":"1"}
             """#)
     }
+    
+    func testKeyedWithNestedEncodable() throws {
+        let sut = KeyWithNestedEncodable()
+        sut.object = KeyWithNestedEncodable.AObject(bObject: KeyWithNestedEncodable.AObject.Bobject(id: "1"))
+        XCTAssertEqual(sut.object.bObject.id, "1")
+        let data = try JSONEncoder().encode(sut)
+        XCTAssertEqual(
+            String(data: data, encoding: .utf8),
+            #"""
+            {"Aobject":{"bObject":{"id":"1"}}}
+            """#)
+    }
 }
 
 // MARK: - KeyedWithKey
@@ -66,4 +78,17 @@ private struct KeyedWithoutKey: SuperEncodable {
 
     @Keyed
     var id: String
+}
+
+private struct KeyWithNestedEncodable: SuperEncodable {
+    struct AObject: Encodable {
+        struct Bobject: Encodable {
+            var id: String
+        }
+
+        var bObject: Bobject
+    }
+
+    @Keyed("Aobject")
+    var object: AObject
 }
