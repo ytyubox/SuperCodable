@@ -67,12 +67,12 @@ public class FATransformOf<OutType, InType> {
 extension FATransformOf: FATransformTypeEncoder where In: Encodable {
     // MARK: Internal
 
-    func transformToEncoder(_ container: inout KeyedEncodingContainer<DynamicCodingKeys>,
+    func transformToEncoder(_ container: inout KeyedEncodingContainer<DynamicKey>,
                             _ value: Out,
                             key: String) throws
     {
         let inOubject = try toEncoder(value)
-        let codingKey = DynamicCodingKeys(key: key)
+        let codingKey = DynamicKey(key: key)
         try? container.encodeIfPresent(inOubject, forKey: codingKey)
     }
 }
@@ -134,7 +134,7 @@ extension KeyedTransform: EncodableKey where In: Encodable {
 
 extension KeyedTransform: DecodableKey where In: Decodable {
     public func decodeValue(from container: DecodeContainer) throws {
-        let codingKey = DynamicCodingKeys(key: key)
+        let codingKey = DynamicKey(key: key)
         if let value = try container.decodeIfPresent(In.self, forKey: codingKey) {
             self.value = try transform.transformFromDecoder(value)
         }
