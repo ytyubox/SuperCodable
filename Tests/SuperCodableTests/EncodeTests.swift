@@ -48,6 +48,27 @@ final class EncodableTests: XCTestCase {
             {"Aobject":{"bObject":{"id":"1"}}}
             """#)
     }
+
+    func testTransfromWithKey() throws {
+        let sut = TransformWithKey()
+        sut.aID = "1"
+        XCTAssertEqual(sut.aID, "1")
+        let data = try JSONEncoder().encode(sut)
+        XCTAssertEqual(
+            String(data: data, encoding: .utf8),
+            #"""
+            {"id":1}
+            """#)
+    }
+
+    func testTransfromWithKeyButFailureShouldHappenEncodeFailure() throws {
+        let sut = TransformWithKey()
+        sut.aID = "nan"
+        XCTAssertEqual(sut.aID, "nan")
+        XCTAssertThrowsError(
+            try JSONEncoder().encode(sut)
+        )
+    }
 }
 
 // MARK: - KeyedWithKey
@@ -68,10 +89,15 @@ private struct KeyedWithKey: SuperEncodable {
 // MARK: - KeyedWithoutKey
 
 private struct KeyedWithoutKey: SuperEncodable {
+    // MARK: Lifecycle
+
     init(id: String) {
         self._id = .init("")
         self.id = id
     }
+
+    // MARK: Internal
+
     @Keyed
     var id: String
 }
@@ -89,4 +115,23 @@ private struct KeyWithNestedEncodable: SuperEncodable {
 
     @Keyed("Aobject")
     var object: AObject
+}
+
+// MARK: - TransformWithKey
+
+private struct TransformWithKey: SuperEncodable {
+    @KeyedTransform(
+        "id",
+        FATransformOf<String, Int>(
+            fromDecoder: { _ in
+                fatalError("not a test subject, should never happen")
+            },
+            toEncoder: {
+                str in
+                guard let transformed = Int(str) else {
+                    throw NSError(domain: "transform Error, str:\(str) is not a Int", code: 0)
+                }
+                return transformed
+            }))
+    var aID: String
 }

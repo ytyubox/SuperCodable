@@ -53,23 +53,35 @@ final class DecodeTests: XCTestCase {
         let sut = try JSONDecoder().decode(KeyWithNestedDeodable.self, from: data)
         XCTAssertEqual(sut.aObject.bObject.id, "1")
     }
-    
+
     func testSuperDecodableWithNoneKeyedPropertyCannotSuccessfulDecode() throws {
         let sut = try makeSUT(for: SuperDecodableWithNoneKeyedProperty.self)
         XCTAssertNotEqual(sut.id, "1")
         XCTAssertTrue(sut.captured.isEmpty)
     }
 
+    func testTransformWithKey() throws {
+        let sut = try makeSUT(for: TransformWithKey.self)
+        XCTAssertEqual(sut.aID, 1)
+    }
+
+    func testTransformWithKeyButTransformFailureShouldMakeDecodeFailure() throws {
+        XCTAssertThrowsError(
+            try makeSUT(for: TransformWithKey.self, customID: "abc")
+        )
+    }
+
     // MARK: Private
 
     private func makeSUT<T: SuperDecodable>(
         for type: T.Type,
+        customID: String = "1",
         file: StaticString = #filePath, line: UInt = #line
     ) throws -> T {
         let data =
             #"""
             {
-                  "id": "1"
+                  "id": "\#(customID)"
             }
             """#.data(using: .utf8)!
         let sut = try JSONDecoder().decode(type.self, from: data)
@@ -113,12 +125,30 @@ private struct KeyWithNestedDeodable: SuperDecodable {
     var aObject: AObject
 }
 
+// MARK: - SuperDecodableWithNoneKeyedProperty
 
 private struct SuperDecodableWithNoneKeyedProperty: SuperDecodable {
-    var captured:[String] = []
+    var captured: [String] = []
+
     var id: String = "" {
         didSet {
             captured.append(id)
         }
     }
+}
+
+// MARK: - TransformWithKey
+
+private struct TransformWithKey: SuperDecodable {
+    @KeyedTransform("id", FATransformOf<Int, String>(fromDecoder: {
+        str in
+        guard let transfromed = Int(str) else {
+            throw NSError(domain: "transform Error, str:\(str) is not a Int", code: 0)
+        }
+        return transfromed
+    }, toEncoder: {
+        _ in
+        fatalError("Not a test subject, should never happen")
+    }))
+    var aID: Int
 }
