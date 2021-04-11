@@ -45,9 +45,25 @@ public final class Keyed<Value> {
 
 extension Keyed: EncodableKey where Value: Encodable {
     public func encodeValue(from container: inout EncodeContainer) throws {
+       try encoding(for: key, from: &container)
+    }
+    
+    func encoding(for key: String, from container: inout EncodeContainer) throws {
         let codingKey = DynamicKey(key: key)
         try container.encodeIfPresent(wrappedValue, forKey: codingKey)
     }
+}
+
+extension Keyed: RunTimeEncodableKey where Value: Encodable {
+    public func shouldApplyRunTimeEncoding() -> Bool {
+        key.isEmpty
+    }
+    
+    public func encodeValue(with key: String, from container: inout EncodeContainer) throws {
+        try encoding(for: key, from: &container)
+    }
+    
+    
 }
 
 // MARK: DecodableKey
@@ -76,7 +92,7 @@ extension Keyed: RunTimeDecodableKey where Value: Decodable {
         key.isEmpty
     }
 
-    func decodeValue(with key: String, from container: DecodeContainer) throws {
+    func encodeValue(with key: String, from container: DecodeContainer) throws {
         try decoding(container, for: key)
     }
 }

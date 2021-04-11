@@ -20,7 +20,7 @@ public protocol DecodableKey {
 
 protocol RunTimeDecodableKey: DecodableKey {
     func shouldApplyRunTimeDecoding() -> Bool
-    func decodeValue(with key: String, from container: DecodeContainer) throws
+    func encodeValue(with key: String, from container: DecodeContainer) throws
 }
 
 // MARK: - DecodableKeyError
@@ -54,7 +54,7 @@ public extension SuperDecodable {
                runTimeDecodable.shouldApplyRunTimeDecoding()
             {
                 let key = child.label?.dropFirst() ?? ""
-                try runTimeDecodable.decodeValue(with: String(key), from: container)
+                try runTimeDecodable.encodeValue(with: String(key), from: container)
             } else {
                 try decodableKey.decodeValue(from: container)
             }

@@ -9,6 +9,8 @@
 
 import Foundation
 
+// MARK: - StudentWithCodable
+
 struct StudentWithCodable: Codable {
     // MARK: Lifecycle
 
@@ -37,5 +39,27 @@ struct StudentWithCodable: Codable {
         try container.encode(aID, forKey: .aID)
         try container.encode(Double(AGrede), forKey: .aGrade)
         try container.encode(aName, forKey: .aName)
+    }
+}
+
+// MARK: - StudentWithSuperCodable
+
+struct StudentWithSuperCodable: SuperCodable {
+    @Keyed("id")
+    var aID: String
+    @Keyed("name") // --> key
+    var aName: String
+    @KeyedTransform("grade", ToolBox.doubleTransform)
+    var AGrede: Int
+}
+
+// MARK: - ToolBox
+
+enum ToolBox {
+    static let doubleTransform = FATransformOf<Int, Double> {
+        (double) -> Int in
+        Int(double)
+    } toEncoder: { (int) -> Double in
+        Double(int) * 10
     }
 }

@@ -16,6 +16,13 @@ public protocol EncodableKey {
     func encodeValue(from container: inout EncodeContainer) throws
 }
 
+// MARK: - RunTimeEncodableKey
+
+public protocol RunTimeEncodableKey: EncodableKey {
+    func shouldApplyRunTimeEncoding() -> Bool
+    func encodeValue(with key: String, from container: inout EncodeContainer) throws
+}
+
 // MARK: - SuperEncodable
 
 public protocol SuperEncodable: Encodable {}
@@ -24,7 +31,14 @@ public extension SuperEncodable {
         var container = encoder.container(keyedBy: DynamicKey.self)
         for child in Mirror(reflecting: self).children {
             guard let encodableKey = child.value as? EncodableKey else { continue }
-            try encodableKey.encodeValue(from: &container)
+            if let runtimeEncodableKey = encodableKey as? RunTimeEncodableKey,
+               runtimeEncodableKey.shouldApplyRunTimeEncoding()
+            {
+                let label = child.label?.dropFirst() ?? ""
+                try runtimeEncodableKey.encodeValue(with: String(label), from: &container)
+            } else {
+                try encodableKey.encodeValue(from: &container)
+            }
         }
     }
 }

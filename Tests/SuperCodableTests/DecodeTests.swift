@@ -45,14 +45,14 @@ final class DecodeTests: XCTestCase {
 
 // MARK: - KeyedWithKey
 
-struct KeyedWithKey: SuperDecodable {
+private struct KeyedWithKey: SuperDecodable {
     @Keyed("id")
     var aID: String
 }
 
 // MARK: - KeyedWithoutKey
 
-struct KeyedWithoutKey: SuperDecodable {
+private struct KeyedWithoutKey: SuperDecodable {
     @Keyed
     var id: String
 }
