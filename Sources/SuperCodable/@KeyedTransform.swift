@@ -9,18 +9,26 @@
 
 import Foundation
 
-// MARK: - SCTransformDecoder
+// MARK: - SCTransformFromDecoder
 
 protocol SCTransformFromDecoder {
-    associatedtype DecoderOut
-    func transformFromDecoder(_ value: Any) throws -> DecoderOut
+    associatedtype Output
+    associatedtype FromDecoderType
+    func transformFromDecoder(
+        _ container: DecodableKey.DecodeContainer,
+        key: String
+    ) throws -> Output
 }
 
-// MARK: - SCTransformEncoder
+// MARK: - SCTransformIntoEncoder
 
 protocol SCTransformIntoEncoder {
     associatedtype EncoderOut
-    func transformToEncoder(_ container: inout EncodableKey.EncodeContainer, _ value: EncoderOut, key: String) throws
+    func transformToEncoder(
+        _ container: inout EncodableKey.EncodeContainer,
+        _ value: EncoderOut,
+        key: String
+    ) throws
 }
 
 // MARK: - FATransformOfError
@@ -37,7 +45,7 @@ struct FATransformOfError: LocalizedError {
     var errorDescription: String?
 }
 
-// MARK: - FATransformOf
+// MARK: - SCTransformOf
 
 public class SCTransformOf<Value, RelateType> {
     // MARK: Lifecycle
@@ -55,36 +63,43 @@ public class SCTransformOf<Value, RelateType> {
     private let toEncoder: (Value) throws -> RelateType
 }
 
-// MARK: SCTransformEncoder
+// MARK: SCTransformIntoEncoder
 
 extension SCTransformOf: SCTransformIntoEncoder where RelateType: Encodable {
-    // MARK: Internal
-
     func transformToEncoder(_ container: inout KeyedEncodingContainer<DynamicKey>,
                             _ value: Value,
                             key: String) throws
     {
-        let inOubject = try toEncoder(value)
+        let toEncoderValue = try toEncoder(value)
         let codingKey = DynamicKey(key: key)
-        try container.encodeIfPresent(inOubject, forKey: codingKey)
+        try container.encodeIfPresent(toEncoderValue, forKey: codingKey)
     }
 }
 
-// MARK: SCTransformDecoder
+// MARK: SCTransformFromDecoder
 
 extension SCTransformOf: SCTransformFromDecoder where RelateType: Decodable {
-    public func transformFromDecoder(_ value: Any) throws -> Value {
-        guard let v = value as? RelateType else {
-            throw FATransformOfError("expect value is \(RelateType.self), but found \(type(of: value))")
+    typealias Output = Value
+
+    typealias FromDecoderType = RelateType
+
+    func transformFromDecoder(
+        _ container: DecodableKey.DecodeContainer,
+        key: String
+    ) throws -> Value {
+        let codingKey = DynamicKey(key: key)
+        if let value = try container.decodeIfPresent(RelateType.self, forKey: codingKey) {
+            return try fromDecoder(value)
         }
-        return try fromDecoder(v)
+        else {
+            throw DecodableKeyError(#"key `\#(key)` not found"#)
+        }
     }
 }
 
 // MARK: - KeyedTransform
 
 @propertyWrapper
-
 public struct KeyedTransform<Value, RelateType> {
     // MARK: Lifecycle
 
@@ -140,7 +155,11 @@ public struct KeyedTransform<Value, RelateType> {
 
 extension KeyedTransform: EncodableKey where Value: Encodable {
     public func encodeValue(from container: inout EncodeContainer) throws {
-        try inner.transform.transformToEncoder(&container, wrappedValue, key: inner.key)
+        try encoding(key: inner.key, from: &container)
+    }
+
+    private func encoding(key: String, from container: inout EncodeContainer) throws {
+        try inner.transform.transformToEncoder(&container, wrappedValue, key: key)
     }
 }
 
@@ -152,7 +171,7 @@ extension KeyedTransform: RunTimeEncodableKey where Value: Encodable {
     }
 
     public func encodeValue(with key: String, from container: inout EncodeContainer) throws {
-        try inner.transform.transformToEncoder(&container, wrappedValue, key: key)
+        try encoding(key: key, from: &container)
     }
 }
 
@@ -164,13 +183,7 @@ extension KeyedTransform: DecodableKey where Value: Decodable {
     }
 
     private func decoding(with key: String, from container: DecodeContainer) throws {
-        let codingKey = DynamicKey(key: key)
-        if let value = try container.decodeIfPresent(Value.self, forKey: codingKey) {
-            inner.value = try inner.transform.transformFromDecoder(value)
-        }
-        else {
-            throw DecodableKeyError(#"key `\#(key)` not found"#)
-        }
+        wrappedValue = try inner.transform.transformFromDecoder(container, key: key)
     }
 }
 
