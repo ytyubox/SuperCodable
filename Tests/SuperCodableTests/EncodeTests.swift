@@ -49,7 +49,7 @@ final class EncodableTests: XCTestCase {
             """#)
     }
 
-    func testTransfromWithKey() throws {
+    func testTransformWithKey() throws {
         let sut = TransformWithKey()
         sut.aID = "1"
         XCTAssertEqual(sut.aID, "1")
@@ -61,7 +61,7 @@ final class EncodableTests: XCTestCase {
             """#)
     }
 
-    func testTransfromWithKeyButFailureShouldHappenEncodeFailure() throws {
+    func testTransformWithKeyButFailureShouldHappenEncodeFailure() throws {
         let sut = TransformWithKey()
         sut.aID = "nan"
         XCTAssertEqual(sut.aID, "nan")
@@ -69,7 +69,7 @@ final class EncodableTests: XCTestCase {
             try JSONEncoder().encode(sut)
         )
     }
-    func testTransfromWithoutKey() throws {
+    func testTransformWithoutKey() throws {
         let sut = TransformWithoutKey()
         sut.id = "1"
         XCTAssertEqual(sut.id, "1")
@@ -81,7 +81,7 @@ final class EncodableTests: XCTestCase {
             """#)
     }
 
-    func testTransfromWithoutKeyButFailureShouldHappenEncodeFailure() throws {
+    func testTransformWithoutKeyButFailureShouldHappenEncodeFailure() throws {
         let sut = TransformWithoutKey()
         sut.id = "nan"
         XCTAssertEqual(sut.id, "nan")

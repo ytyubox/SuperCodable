@@ -152,10 +152,10 @@ private struct SuperDecodableWithNoneKeyedProperty: SuperDecodable {
 private struct TransformWithKey: SuperDecodable {
     @KeyedTransform("id", SCTransformOf<Int, String>(fromDecoder: {
         str in
-        guard let transfromed = Int(str) else {
+        guard let transformed = Int(str) else {
             throw NSError(domain: "transform Error, str:\(str) is not a Int", code: 0)
         }
-        return transfromed
+        return transformed
     }, toEncoder: {
         _ in
         fatalError("Not a test subject, should never happen")
@@ -167,10 +167,10 @@ private struct TransformWithKey: SuperDecodable {
 private struct TransformWithoutKey: SuperDecodable {
     @KeyedTransform(SCTransformOf<Int, String>(fromDecoder: {
         str in
-        guard let transfromed = Int(str) else {
+        guard let transformed = Int(str) else {
             throw NSError(domain: "transform Error, str:\(str) is not a Int", code: 0)
         }
-        return transfromed
+        return transformed
     }, toEncoder: {
         _ in
         fatalError("Not a test subject, should never happen")
