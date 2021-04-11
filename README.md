@@ -39,14 +39,14 @@ struct AStudent: Codable {
 
 ```swift
 struct Student: SuperCodable {
-    @Keyed("id")
-    var aID: String
+    @Keyed
+    var id: String
     
     @Keyed("name") 
     var aName: String
     
     @KeyedTransform("grade", doubleTransform)
-    var AGrede: Int
+    var AGrade: Int
 }
 
 let doubleTransform = FATransformOf<Int, Double> {
@@ -65,3 +65,8 @@ let doubleTransform = FATransformOf<Int, Double> {
 
 - SuperDecoable must construct from nothing `(init()`)
 - `@Keyed var id:Int` will do O(n) calculation on underlaying wrapper `_id` into key `id`.
+
+
+## Known Disability
+
+- Every property in a SuperCodable should a `DecodableKey` / `EncodableKey`, otherwise the property will simply ignored during the Codable process.

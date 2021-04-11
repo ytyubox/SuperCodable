@@ -13,12 +13,12 @@ let doubleTransform = FATransformOf<Int, Double> {
 // MARK: - Student
 
 struct Student: SuperCodable {
-    @Keyed("id") // --> key
+    @Keyed("id")
     var aID: String
-    @Keyed("name") // --> key
+    @Keyed("name")
     var aName: String
-    @KeyedTransform("grade", doubleTransform) // --> key
-    var AGrede: Int
+    @KeyedTransform("grade", doubleTransform)
+    var AGrade: Int
 }
 
 // MARK: - SuperCodableTests
@@ -49,7 +49,7 @@ final class SuperCodableTests: XCTestCase {
         XCTAssertEqual(sut.count,
                        3)
         XCTAssertEqual(
-            sut.map(\.AGrede),
+            sut.map(\.AGrade),
             [3, 2, 4])
         let encoded = try JSONEncoder().encode(sut)
         let encodedString = try XCTUnwrap(String(data: encoded, encoding: .utf8))
