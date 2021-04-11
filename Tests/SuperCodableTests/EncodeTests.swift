@@ -24,7 +24,7 @@ final class EncodableTests: XCTestCase {
             {"id":"1"}
             """#)
     }
-    
+
     func testKeyedWithoutKey() throws {
         let sut = KeyedWithoutKey(id: "1")
         XCTAssertEqual(sut.id, "1")
@@ -36,7 +36,7 @@ final class EncodableTests: XCTestCase {
             {"id":"1"}
             """#)
     }
-    
+
     func testKeyedWithNestedEncodable() throws {
         let sut = KeyWithNestedEncodable()
         sut.object = KeyWithNestedEncodable.AObject(bObject: KeyWithNestedEncodable.AObject.Bobject(id: "1"))
@@ -68,17 +68,15 @@ private struct KeyedWithKey: SuperEncodable {
 // MARK: - KeyedWithoutKey
 
 private struct KeyedWithoutKey: SuperEncodable {
-    // MARK: Lifecycle
-
     init(id: String) {
+        self._id = .init("")
         self.id = id
     }
-
-    // MARK: Internal
-
     @Keyed
     var id: String
 }
+
+// MARK: - KeyWithNestedEncodable
 
 private struct KeyWithNestedEncodable: SuperEncodable {
     struct AObject: Encodable {

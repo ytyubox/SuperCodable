@@ -1,8 +1,6 @@
 import SuperCodable
 import XCTest
 
-// MARK: - Student
-
 let doubleTransform = FATransformOf<Int, Double> {
     (double) -> Int in
     Int(double)
@@ -13,8 +11,8 @@ let doubleTransform = FATransformOf<Int, Double> {
 // MARK: - Student
 
 struct Student: SuperCodable {
-    @Keyed("id")
-    var aID: String
+    @Keyed
+    var id: String
     @Keyed("name")
     var aName: String
     @KeyedTransform("grade", doubleTransform)
