@@ -142,7 +142,7 @@ private struct KeyWithNestedEncodable: SuperEncodable {
 private struct TransformWithKey: SuperEncodable {
     @KeyedTransform(
         "id",
-        FATransformOf<String, Int>(
+        SCTransformOf<String, Int>(
             fromDecoder: { _ in
                 fatalError("not a test subject, should never happen")
             },
@@ -159,7 +159,7 @@ private struct TransformWithKey: SuperEncodable {
 
 private struct TransformWithoutKey: SuperEncodable {
     @KeyedTransform(
-        FATransformOf<String, Int>(
+        SCTransformOf<String, Int>(
             fromDecoder: { _ in
                 fatalError("not a test subject, should never happen")
             },

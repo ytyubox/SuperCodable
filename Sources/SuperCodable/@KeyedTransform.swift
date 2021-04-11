@@ -9,20 +9,18 @@
 
 import Foundation
 
-// MARK: - FATransformDecoder
+// MARK: - SCTransformDecoder
 
-protocol FATransformDecoder {
-    associatedtype Out
-    associatedtype In
-    func transformFromDecoder(_ value: Any) throws -> Out?
+protocol SCTransformFromDecoder {
+    associatedtype DecoderOut
+    func transformFromDecoder(_ value: Any) throws -> DecoderOut
 }
 
-// MARK: - FATransformTypeEncoder
+// MARK: - SCTransformEncoder
 
-protocol FATransformTypeEncoder {
-    associatedtype Out
-    associatedtype In
-    func transformToEncoder(_ container: inout EncodableKey.EncodeContainer, _ value: Out, key: String) throws
+protocol SCTransformIntoEncoder {
+    associatedtype EncoderOut
+    func transformToEncoder(_ container: inout EncodableKey.EncodeContainer, _ value: EncoderOut, key: String) throws
 }
 
 // MARK: - FATransformOfError
@@ -41,48 +39,43 @@ struct FATransformOfError: LocalizedError {
 
 // MARK: - FATransformOf
 
-public class FATransformOf<OutType, InType> {
+public class SCTransformOf<Value, RelateType> {
     // MARK: Lifecycle
 
-    public init(fromDecoder: @escaping (InType) throws -> OutType,
-                toEncoder: @escaping (OutType) throws -> InType)
+    public init(fromDecoder: @escaping (RelateType) throws -> Value,
+                toEncoder: @escaping (Value) throws -> RelateType)
     {
         self.fromDecoder = fromDecoder
         self.toEncoder = toEncoder
     }
 
-    // MARK: Public
-
-    public typealias Out = OutType
-    public typealias In = InType
-
     // MARK: Private
 
-    private let fromDecoder: (InType) throws -> OutType
-    private let toEncoder: (OutType) throws -> InType
+    private let fromDecoder: (RelateType) throws -> Value
+    private let toEncoder: (Value) throws -> RelateType
 }
 
-// MARK: FATransformTypeEncoder
+// MARK: SCTransformEncoder
 
-extension FATransformOf: FATransformTypeEncoder where In: Encodable {
+extension SCTransformOf: SCTransformIntoEncoder where RelateType: Encodable {
     // MARK: Internal
 
     func transformToEncoder(_ container: inout KeyedEncodingContainer<DynamicKey>,
-                            _ value: Out,
+                            _ value: Value,
                             key: String) throws
     {
         let inOubject = try toEncoder(value)
         let codingKey = DynamicKey(key: key)
-        try? container.encodeIfPresent(inOubject, forKey: codingKey)
+        try container.encodeIfPresent(inOubject, forKey: codingKey)
     }
 }
 
-// MARK: FATransformDecoder
+// MARK: SCTransformDecoder
 
-extension FATransformOf: FATransformDecoder where In: Decodable {
-    public func transformFromDecoder(_ value: Any) throws -> OutType? {
-        guard let v = value as? InType else {
-            throw FATransformOfError("expect value is \(InType.self), but found \(type(of: value))")
+extension SCTransformOf: SCTransformFromDecoder where RelateType: Decodable {
+    public func transformFromDecoder(_ value: Any) throws -> Value {
+        guard let v = value as? RelateType else {
+            throw FATransformOfError("expect value is \(RelateType.self), but found \(type(of: value))")
         }
         return try fromDecoder(v)
     }
@@ -92,24 +85,24 @@ extension FATransformOf: FATransformDecoder where In: Decodable {
 
 @propertyWrapper
 
-public struct KeyedTransform<In, Out> {
+public struct KeyedTransform<Value, RelateType> {
     // MARK: Lifecycle
 
     public init(_ key: String,
-                _ transform: FATransformOf<Out, In>)
+                _ transform: SCTransformOf<RelateType, Value>)
     {
         self.inner = Inner(key, transform)
     }
 
     public init(
-        _ transform: FATransformOf<Out, In>)
+        _ transform: SCTransformOf<RelateType, Value>)
     {
         self.inner = Inner("", transform)
     }
 
     // MARK: Public
 
-    public var wrappedValue: Out {
+    public var wrappedValue: RelateType {
         get {
             inner.value!
         }
@@ -124,7 +117,7 @@ public struct KeyedTransform<In, Out> {
         // MARK: Lifecycle
 
         public init(_ key: String,
-                    _ transform: FATransformOf<Out, In>)
+                    _ transform: SCTransformOf<RelateType, Value>)
         {
             self.key = key
             self.transform = transform
@@ -133,9 +126,9 @@ public struct KeyedTransform<In, Out> {
         // MARK: Internal
 
         let key: String
-        var transform: FATransformOf<Out, In>
+        var transform: SCTransformOf<RelateType, Value>
 
-        var value: Out?
+        var value: RelateType?
     }
 
     // MARK: Private
@@ -145,7 +138,7 @@ public struct KeyedTransform<In, Out> {
 
 // MARK: EncodableKey
 
-extension KeyedTransform: EncodableKey where In: Encodable {
+extension KeyedTransform: EncodableKey where Value: Encodable {
     public func encodeValue(from container: inout EncodeContainer) throws {
         try inner.transform.transformToEncoder(&container, wrappedValue, key: inner.key)
     }
@@ -153,7 +146,7 @@ extension KeyedTransform: EncodableKey where In: Encodable {
 
 // MARK: RunTimeEncodableKey
 
-extension KeyedTransform: RunTimeEncodableKey where In: Encodable {
+extension KeyedTransform: RunTimeEncodableKey where Value: Encodable {
     public func shouldApplyRunTimeEncoding() -> Bool {
         inner.key.isEmpty
     }
@@ -165,14 +158,14 @@ extension KeyedTransform: RunTimeEncodableKey where In: Encodable {
 
 // MARK: DecodableKey
 
-extension KeyedTransform: DecodableKey where In: Decodable {
+extension KeyedTransform: DecodableKey where Value: Decodable {
     public func decodeValue(from container: DecodeContainer) throws {
         try decoding(with: inner.key, from: container)
     }
 
     private func decoding(with key: String, from container: DecodeContainer) throws {
         let codingKey = DynamicKey(key: key)
-        if let value = try container.decodeIfPresent(In.self, forKey: codingKey) {
+        if let value = try container.decodeIfPresent(Value.self, forKey: codingKey) {
             inner.value = try inner.transform.transformFromDecoder(value)
         }
         else {
@@ -183,7 +176,7 @@ extension KeyedTransform: DecodableKey where In: Decodable {
 
 // MARK: RunTimeDecodableKey
 
-extension KeyedTransform: RunTimeDecodableKey where In: Decodable {
+extension KeyedTransform: RunTimeDecodableKey where Value: Decodable {
     func shouldApplyRunTimeDecoding() -> Bool {
         inner.key.isEmpty
     }

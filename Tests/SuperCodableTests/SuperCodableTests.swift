@@ -1,7 +1,7 @@
 import SuperCodable
 import XCTest
 
-let doubleTransform = FATransformOf<Int, Double> {
+let doubleTransform = SCTransformOf<Int, Double> {
     (double) -> Int in
     Int(double)
 } toEncoder: { (int) -> Double in

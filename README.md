@@ -1,9 +1,7 @@
 # SuperCodable
 
-Inspired by: https://medium.com/trueid-developers/combined-propertywrapper-with-codable-swift-368dc4aa2703
 
-
-> From Foundation
+##  From Foundation
 
 ```swift
 struct AStudent: Codable {
@@ -35,7 +33,7 @@ struct AStudent: Codable {
 ```
 
 
-> To SuperCodable
+## To SuperCodable
 
 ```swift
 struct Student: SuperCodable {
@@ -70,3 +68,11 @@ let doubleTransform = FATransformOf<Int, Double> {
 ## Known Disability
 
 - Every property in a SuperCodable should a `DecodableKey` / `EncodableKey`, otherwise the property will simply ignored during the Codable process.
+
+
+## Other notes
+
+- Inspired by: https://medium.com/trueid-developers/combined-propertywrapper-with-codable-swift-368dc4aa2703
+
+- Try to merge `@KeyedTransform` into `@Keyed`, but it required `@Keyed var id: String` to be `@Keyed() var id: String`, with extra `()` 🧐
+
