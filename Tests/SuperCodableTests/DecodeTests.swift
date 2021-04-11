@@ -70,6 +70,16 @@ final class DecodeTests: XCTestCase {
             try makeSUT(for: TransformWithKey.self, customID: "abc")
         )
     }
+    func testTransformWithoutKey() throws {
+        let sut = try makeSUT(for: TransformWithoutKey.self)
+        XCTAssertEqual(sut.id, 1)
+    }
+
+    func testTransformWithoutKeyButTransformFailureShouldMakeDecodeFailure() throws {
+        XCTAssertThrowsError(
+            try makeSUT(for: TransformWithoutKey.self, customID: "abc")
+        )
+    }
 
     // MARK: Private
 
@@ -151,4 +161,19 @@ private struct TransformWithKey: SuperDecodable {
         fatalError("Not a test subject, should never happen")
     }))
     var aID: Int
+}
+
+
+private struct TransformWithoutKey: SuperDecodable {
+    @KeyedTransform(FATransformOf<Int, String>(fromDecoder: {
+        str in
+        guard let transfromed = Int(str) else {
+            throw NSError(domain: "transform Error, str:\(str) is not a Int", code: 0)
+        }
+        return transfromed
+    }, toEncoder: {
+        _ in
+        fatalError("Not a test subject, should never happen")
+    }))
+    var id: Int
 }

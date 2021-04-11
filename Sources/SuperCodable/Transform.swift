@@ -91,42 +91,75 @@ extension FATransformOf: FATransformDecoder where In: Decodable {
 // MARK: - KeyedTransform
 
 @propertyWrapper
-public final class KeyedTransform<In, Out> {
+
+public struct KeyedTransform<In, Out> {
     // MARK: Lifecycle
 
     public init(_ key: String,
                 _ transform: FATransformOf<Out, In>)
     {
-        self.key = key
-        self.transform = transform
+        self.inner = Inner(key, transform)
+    }
+
+    public init(
+        _ transform: FATransformOf<Out, In>)
+    {
+        self.inner = Inner("", transform)
     }
 
     // MARK: Public
 
     public var wrappedValue: Out {
         get {
-            value!
+            inner.value!
         }
-        set {
-            value = newValue
+        nonmutating set {
+            inner.value = newValue
         }
     }
 
-    // MARK: Internal
+    // MARK: Fileprivate
 
-    let key: String
-    var transform: FATransformOf<Out, In>
+    fileprivate final class Inner {
+        // MARK: Lifecycle
+
+        public init(_ key: String,
+                    _ transform: FATransformOf<Out, In>)
+        {
+            self.key = key
+            self.transform = transform
+        }
+
+        // MARK: Internal
+
+        let key: String
+        var transform: FATransformOf<Out, In>
+
+        var value: Out?
+    }
 
     // MARK: Private
 
-    private var value: Out?
+    private let inner: Inner
 }
 
 // MARK: EncodableKey
 
 extension KeyedTransform: EncodableKey where In: Encodable {
     public func encodeValue(from container: inout EncodeContainer) throws {
-        try transform.transformToEncoder(&container, wrappedValue, key: key)
+        try inner.transform.transformToEncoder(&container, wrappedValue, key: inner.key)
+    }
+}
+
+// MARK: RunTimeEncodableKey
+
+extension KeyedTransform: RunTimeEncodableKey where In: Encodable {
+    public func shouldApplyRunTimeEncoding() -> Bool {
+        inner.key.isEmpty
+    }
+
+    public func encodeValue(with key: String, from container: inout EncodeContainer) throws {
+        try inner.transform.transformToEncoder(&container, wrappedValue, key: key)
     }
 }
 
@@ -134,9 +167,28 @@ extension KeyedTransform: EncodableKey where In: Encodable {
 
 extension KeyedTransform: DecodableKey where In: Decodable {
     public func decodeValue(from container: DecodeContainer) throws {
+        try decoding(with: inner.key, from: container)
+    }
+
+    private func decoding(with key: String, from container: DecodeContainer) throws {
         let codingKey = DynamicKey(key: key)
         if let value = try container.decodeIfPresent(In.self, forKey: codingKey) {
-            self.value = try transform.transformFromDecoder(value)
+            inner.value = try inner.transform.transformFromDecoder(value)
         }
+        else {
+            throw DecodableKeyError(#"key `\#(key)` not found"#)
+        }
+    }
+}
+
+// MARK: RunTimeDecodableKey
+
+extension KeyedTransform: RunTimeDecodableKey where In: Decodable {
+    func shouldApplyRunTimeDecoding() -> Bool {
+        inner.key.isEmpty
+    }
+
+    func decodeValue(with key: String, from container: DecodeContainer) throws {
+        try decoding(with: key, from: container)
     }
 }

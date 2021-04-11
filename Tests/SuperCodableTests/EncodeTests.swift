@@ -69,6 +69,26 @@ final class EncodableTests: XCTestCase {
             try JSONEncoder().encode(sut)
         )
     }
+    func testTransfromWithoutKey() throws {
+        let sut = TransformWithoutKey()
+        sut.id = "1"
+        XCTAssertEqual(sut.id, "1")
+        let data = try JSONEncoder().encode(sut)
+        XCTAssertEqual(
+            String(data: data, encoding: .utf8),
+            #"""
+            {"id":1}
+            """#)
+    }
+
+    func testTransfromWithoutKeyButFailureShouldHappenEncodeFailure() throws {
+        let sut = TransformWithoutKey()
+        sut.id = "nan"
+        XCTAssertEqual(sut.id, "nan")
+        XCTAssertThrowsError(
+            try JSONEncoder().encode(sut)
+        )
+    }
 }
 
 // MARK: - KeyedWithKey
@@ -134,4 +154,21 @@ private struct TransformWithKey: SuperEncodable {
                 return transformed
             }))
     var aID: String
+}
+
+
+private struct TransformWithoutKey: SuperEncodable {
+    @KeyedTransform(
+        FATransformOf<String, Int>(
+            fromDecoder: { _ in
+                fatalError("not a test subject, should never happen")
+            },
+            toEncoder: {
+                str in
+                guard let transformed = Int(str) else {
+                    throw NSError(domain: "transform Error, str:\(str) is not a Int", code: 0)
+                }
+                return transformed
+            }))
+    var id: String
 }
