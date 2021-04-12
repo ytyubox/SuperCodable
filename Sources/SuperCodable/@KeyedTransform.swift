@@ -31,9 +31,9 @@ protocol SCTransformIntoEncoder {
     ) throws
 }
 
-// MARK: - FATransformOfError
+// MARK: - SCTransformOfError
 
-struct FATransformOfError: LocalizedError {
+struct SCTransformOfError: LocalizedError {
     // MARK: Lifecycle
 
     internal init(_ errorDescription: String? = nil) {
