@@ -78,3 +78,6 @@ let doubleTransform = SCTransformOf<Int, Double> {
 
 - Try to merge `@KeyedTransform` into `@Keyed`, but it required `@Keyed var id: String` to be `@Keyed() var id: String`, with extra `()` 🧐
 
+## Know Issues
+
+- `@Keyed var id:String?` will cause fatalError on force unwrapping `Keyed.value?`
