@@ -16,47 +16,50 @@ struct StudentWithCodable: Codable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.aID = try container.decode(String.self, forKey: .aID)
+        self.id = try container.decode(String.self, forKey: .id)
         self.aName = try container.decode(String.self, forKey: .aName)
-        let gradeDecoded = try container.decode(Double.self, forKey: .aGrade)
-        self.AGrede = Int(gradeDecoded)
+        let gradeDecoded = try container.decode(Double.self, forKey: .grade)
+        self.grade = Int(gradeDecoded)
     }
 
     // MARK: Internal
 
     enum CodingKeys: String, CodingKey {
+        case id = "id"
         case aName = "name"
-        case aGrade = "grade"
-        case aID = "id"
+        case grade = "grade"
+
     }
 
-    var aID: String
+    var id: String
     var aName: String
-    var AGrede: Int
+    var grade: Int
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(aID, forKey: .aID)
-        try container.encode(Double(AGrede), forKey: .aGrade)
+        try container.encode(id, forKey: .id)
         try container.encode(aName, forKey: .aName)
+        try container.encode(Double(grade), forKey: .grade)
+
     }
 }
 
 // MARK: - StudentWithSuperCodable
 
 struct StudentWithSuperCodable: SuperCodable {
-    @Keyed("id")
     var aID: String
-    @Keyed("name") // --> key
+    
+    @Keyed("name")
     var aName: String
-    @KeyedTransform("grade", ToolBox.doubleTransform)
-    var AGrede: Int
+    
+    @KeyedTransform(ToolBox.doubleTransform)
+    var AGrade: Int
 }
 
 // MARK: - ToolBox
 
 enum ToolBox {
-    static let doubleTransform = FATransformOf<Int, Double> {
+    static let doubleTransform = SCTransformOf<Int, Double> {
         (double) -> Int in
         Int(double)
     } toEncoder: { (int) -> Double in
