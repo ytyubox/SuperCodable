@@ -78,6 +78,9 @@ let doubleTransform = SCTransformOf<Int, Double> {
 
 - Try to merge `@KeyedTransform` into `@Keyed`, but it required `@Keyed var id: String` to be `@Keyed() var id: String`, with extra `()` 🧐
 
+- Swift should auto generate `STRUCT.init(....)` for you, **but** if you using `@Keyed var id: String` without default value, it will generate `init(id: Keyed<String>)`, by giving default value `@Keyed var id: String = ""` should solve this problem. 
+
 ## Know Issues
 
-- `@Keyed var id:String?` will cause fatalError on force unwrapping `Keyed.value?`
+- `@Keyed var id:String?` will cause fatalError on force unwrapping `Keyed.value?`, you can using `@OptionalKeyed` to make it works.
+- `OptionalKeyed` may / may not a good name, I am thinking of make the easy to change, maybe `KeyedOptional` is EASY change? 🤔
