@@ -20,6 +20,28 @@ final class DecodeTests: XCTestCase {
         let sut = try makeSUT(for: KeyedWithKey.self)
         XCTAssertEqual(sut.aID, "1")
     }
+    
+    func testOptionalKeyedWithKey() throws {
+        let sut = try makeSUT(for: OptionalKeyedWithKey.self)
+        XCTAssertEqual(sut.aID, "1")
+    }
+    
+    func testOptionalKeyedWithKeyButMissingValue() throws {
+        let sut = try makeSUT(for: OptionalKeyedWithKeyButWithMissValue.self)
+        XCTAssertEqual(sut.aID, "1")
+        XCTAssertNil(sut.notKey)
+    }
+    
+    func testOptionalKeyedWitouthKey() throws {
+        let sut = try makeSUT(for: OptionalKeyedWithoutKey.self)
+        XCTAssertEqual(sut.id, "1")
+    }
+    
+    func testOptionalKeyedWithoutKeyButMissingValue() throws {
+        let sut = try makeSUT(for: OptionalKeyedWithoutKeyButWithMissValue.self)
+        XCTAssertEqual(sut.id, "1")
+        XCTAssertNil(sut.notKey)
+    }
 
     func testKeyedWithoutKey() throws {
         let sut = try makeSUT(for: KeyedWithoutKey.self)
@@ -104,6 +126,27 @@ final class DecodeTests: XCTestCase {
 private struct KeyedWithKey: SuperDecodable {
     @Keyed("id")
     var aID: String
+}
+private struct OptionalKeyedWithKey: SuperDecodable {
+    @OptionalKeyed("id")
+    var aID: String?
+}
+private struct OptionalKeyedWithKeyButWithMissValue: SuperDecodable {
+    @OptionalKeyed("id")
+    var aID: String?
+    @OptionalKeyed("notKey")
+    var notKey: String?
+}
+
+private struct OptionalKeyedWithoutKey: SuperDecodable {
+    @OptionalKeyed
+    var id: String?
+}
+private struct OptionalKeyedWithoutKeyButWithMissValue: SuperDecodable {
+    @OptionalKeyed
+    var id: String?
+    @OptionalKeyed
+    var notKey: String?
 }
 
 // MARK: - KeyedWithoutKey

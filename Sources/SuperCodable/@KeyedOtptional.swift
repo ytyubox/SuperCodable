@@ -1,23 +1,21 @@
 //
-/*
- *		Created by 游宗諭 in 2021/4/11
- *
+/* 
+ *		Created by 游宗諭 in 2021/4/12
+ *		
  *		Using Swift 5.0
- *
+ *		
  *		Running on macOS 11.2
  */
 
+
 import Foundation
 
-// MARK: - Keyed
-
 @propertyWrapper
-public struct Keyed<Value> {
+public struct OptionalKeyed<Value> {
     public init(_ key: String) {
         self.inner = Inner(key)
     }
-
-    public init(wrappedValue: Value, _ key: String) {
+    public init(wrappedValue: Value?, _ key: String) {
         self.inner = Inner(key)
         inner.value = .already(wrappedValue)
     }
@@ -25,15 +23,12 @@ public struct Keyed<Value> {
     public init() {
         self.inner = Inner("")
     }
-
-    public init(wrappedValue: Value) {
+    public init(wrappedValue: Value?) {
         self.inner = Inner("")
         inner.value = .already(wrappedValue)
     }
 
-    // MARK: Public
-
-    public var wrappedValue: Value {
+    public var wrappedValue: Value? {
         get {
             switch inner.value {
             case .yet:
@@ -41,7 +36,7 @@ public struct Keyed<Value> {
             case let .already(v):
                 return v
             case .none:
-                fatalError("😅 @Keyed current not support Optional property, please consider using @OptionalKeyed")
+                return nil
             }
         }
         nonmutating set {
@@ -49,19 +44,13 @@ public struct Keyed<Value> {
         }
     }
 
-    // MARK: Private
-
     private final class Inner {
-        // MARK: Lifecycle
-
         public init(_ key: String) {
             self.key = key
         }
 
-        // MARK: Fileprivate
-
         fileprivate let key: String
-        fileprivate var value: Lazy<Value> = .none
+        fileprivate var value: Lazy<Value?> = .yet
     }
 
     private let inner: Inner
@@ -69,7 +58,7 @@ public struct Keyed<Value> {
 
 // MARK: EncodableKey
 
-extension Keyed: EncodableKey where Value: Encodable {
+extension OptionalKeyed: EncodableKey where Value: Encodable {
     public func encodeValue(from container: inout EncodeContainer) throws {
         try encoding(for: inner.key, from: &container)
     }
@@ -82,7 +71,7 @@ extension Keyed: EncodableKey where Value: Encodable {
 
 // MARK: RunTimeEncodableKey
 
-extension Keyed: RunTimeEncodableKey where Value: Encodable {
+extension OptionalKeyed: RunTimeEncodableKey where Value: Encodable {
     public func shouldApplyRunTimeEncoding() -> Bool {
         inner.key.isEmpty
     }
@@ -94,7 +83,7 @@ extension Keyed: RunTimeEncodableKey where Value: Encodable {
 
 // MARK: DecodableKey
 
-extension Keyed: DecodableKey where Value: Decodable {
+extension OptionalKeyed: DecodableKey where Value: Decodable {
     public func decodeValue(from container: DecodeContainer) throws {
         if inner.key.isEmpty {
             throw DecodableKeyError("key is missing")
@@ -107,7 +96,8 @@ extension Keyed: DecodableKey where Value: Decodable {
 
         if let value = try container.decodeIfPresent(Value.self, forKey: codingKey) {
             inner.value = .already(value)
-        } else {
+        }
+        else {
             inner.value = .none
         }
     }
@@ -115,7 +105,7 @@ extension Keyed: DecodableKey where Value: Decodable {
 
 // MARK: RunTimeDecodableKey
 
-extension Keyed: RunTimeDecodableKey where Value: Decodable {
+extension OptionalKeyed: RunTimeDecodableKey where Value: Decodable {
     func shouldApplyRunTimeDecoding() -> Bool {
         inner.key.isEmpty
     }

@@ -37,6 +37,30 @@ final class EncodableTests: XCTestCase {
             """#)
     }
 
+    func testOptionalKeyedWithKey() throws {
+        let sut = OptionalKeyedWithKey(id: "1")
+        XCTAssertEqual(sut.aID, "1")
+
+        let data = try JSONEncoder().encode(sut)
+        XCTAssertEqual(
+            String(data: data, encoding: .utf8),
+            #"""
+            {"id":"1"}
+            """#)
+    }
+
+    func testOptionalKeyedWithoutKey() throws {
+        let sut = OptionalKeyedWithoutKey(id: nil)
+        XCTAssertNil(sut.id, "1")
+
+        let data = try JSONEncoder().encode(sut)
+        XCTAssertEqual(
+            String(data: data, encoding: .utf8),
+            #"""
+            {}
+            """#)
+    }
+
     func testKeyedWithNestedEncodable() throws {
         let sut = KeyWithNestedEncodable()
         sut.object = KeyWithNestedEncodable.AObject(bObject: KeyWithNestedEncodable.AObject.Bobject(id: "1"))
@@ -69,6 +93,7 @@ final class EncodableTests: XCTestCase {
             try JSONEncoder().encode(sut)
         )
     }
+
     func testTransformWithoutKey() throws {
         let sut = TransformWithoutKey()
         sut.id = "1"
@@ -106,6 +131,21 @@ private struct KeyedWithKey: SuperEncodable {
     var aID: String
 }
 
+// MARK: - OptionalKeyedWithKey
+
+private struct OptionalKeyedWithKey: SuperEncodable {
+    // MARK: Lifecycle
+
+    init(id: String) {
+        self._aID.wrappedValue = id
+    }
+
+    // MARK: Internal
+
+    @OptionalKeyed("id")
+    var aID: String? = "1"
+}
+
 // MARK: - KeyedWithoutKey
 
 private struct KeyedWithoutKey: SuperEncodable {
@@ -120,6 +160,15 @@ private struct KeyedWithoutKey: SuperEncodable {
 
     @Keyed
     var id: String
+}
+
+// MARK: - OptionalKeyedWithoutKey
+
+private struct OptionalKeyedWithoutKey: SuperEncodable {
+    // MARK: Internal
+
+    @OptionalKeyed
+    var id: String? = nil
 }
 
 // MARK: - KeyWithNestedEncodable
@@ -156,6 +205,7 @@ private struct TransformWithKey: SuperEncodable {
     var aID: String
 }
 
+// MARK: - TransformWithoutKey
 
 private struct TransformWithoutKey: SuperEncodable {
     @KeyedTransform(
