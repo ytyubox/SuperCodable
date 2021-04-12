@@ -47,7 +47,7 @@ struct Student: SuperCodable {
     var AGrade: Int
 }
 
-let doubleTransform = FATransformOf<Int, Double> {
+let doubleTransform = SCTransformOf<Int, Double> {
     (double) -> Int in
     Int(double)
 } toEncoder: { (int) -> Double in
@@ -57,7 +57,7 @@ let doubleTransform = FATransformOf<Int, Double> {
 
 ## Feature
 
-- Working with Nested None `Foundation.Codable` property 
+- Working with Nested `Foundation.Codable` property
 
 ## Known side effect 
 
