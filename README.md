@@ -55,6 +55,36 @@ let doubleTransform = SCTransformOf<Int, Double> {
 }
 ```
 
+## Even random backend type
+
+```swift
+ let data =
+            #"""
+            [
+                {
+                    "id": "0",
+                },
+                {
+                    "id": 1,
+                },
+                {
+                    "id": "abc",
+                },
+                {
+                    "id": true,
+                },
+            ]
+            """#.data(using: .utf8)!
+        let sut = try! JSONDecoder().decode([AnyValueJSON].self, from: data)
+        XCTAssertEqual(sut.count,
+                       4)
+        XCTAssertEqual(
+            sut.map(\._id),
+            [0, 1, 0, 1])
+```
+
+Can be found in `Tests/SuperCodableTests/AnyValueDecode.swift`
+
 ## Feature
 
 - Working with Nested `Foundation.Codable` property
