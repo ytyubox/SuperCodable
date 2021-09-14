@@ -81,9 +81,8 @@ struct AnyValueJSON: SuperCodable {
     ]
     """#.data(using: .utf8)!
 let sut = try! JSONDecoder().decode([AnyValueJSON].self, from: data)
-XCTAssertEqual(sut.count,
-               4)
-XCTAssertEqual(sut.map(\._id), [0, 1, 0, 1])
+XCTAssertEqual(sut.count, 4)
+XCTAssertEqual(sut.map(\.id), [0, 1, 0, 1])
 ```
 
 Can be found in [Tests/SuperCodableTests/AnyValueDecode.swift](Tests/SuperCodableTests/AnyValueDecode.swift)
