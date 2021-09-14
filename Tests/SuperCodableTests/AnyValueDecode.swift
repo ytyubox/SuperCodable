@@ -33,15 +33,15 @@ final class AnyValueTests: XCTestCase {
         XCTAssertEqual(sut.count,
                        4)
         XCTAssertEqual(
-            sut.map(\._id),
+            sut.map(\.id),
             [0, 1, 0, 1])
        
     }
 }
 
 private struct AnyValueJSON: SuperCodable {
-    @KeyedTransform("id", IDTransform)
-    var _id:Int
+    @KeyedTransform(IDTransform)
+    var id:Int
 }
 
 let IDTransform = SCTransformOf<Int, AnyValue> {
