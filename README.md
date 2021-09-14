@@ -58,6 +58,11 @@ let doubleTransform = SCTransformOf<Int, Double> {
 ## Even random backend type
 
 ```swift
+struct AnyValueJSON: SuperCodable {
+    @KeyedTransform(IDTransform)
+    var id:Int
+}
+
  let data =
     #"""
     [
